@@ -2,21 +2,16 @@
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using System;
+using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
 using TurnUpNUnitTestProject.Helpers;
 
 namespace TurnUpNUnitTestProject
 {
-    internal class TimeMaterialPage
+    internal class TimeMaterialPage : DriverClass
     {
-        private IWebDriver driver;
-
-        public TimeMaterialPage(IWebDriver driver)
-        {
-            this.driver = driver;
-        }
-
-        internal void ClickCreateNew()
+        
+        internal void ClickCreateNew(IWebDriver driver)
         {
             //check if we are on time and material page
             Assert.That(driver.Title, Is.EqualTo("Index - Dispatching System"));
@@ -31,7 +26,7 @@ namespace TurnUpNUnitTestProject
         }
 
 
-        internal void CreateNewRecord(string code, string Description)
+        internal void CreateNewRecord(IWebDriver driver,string code, string Description)
         {
             try
             {
@@ -41,6 +36,7 @@ namespace TurnUpNUnitTestProject
             catch(Exception message)
             {
                 Console.WriteLine(message);
+                Assert.Fail();
             }
  
             //find code textbox and write code
@@ -63,20 +59,27 @@ namespace TurnUpNUnitTestProject
             Thread.Sleep(3000);
         }
 
-        internal void DeleteRecord()
+        internal void DeleteRecord(IWebDriver driver)
         {
             Thread.Sleep(1000);
+
+            //Check if the button text is Delete
             Assert.AreEqual("Delete", driver.FindElement(By.XPath("//*[@id='tmsGrid']/div[3]/table/tbody/tr[1]/td[5]/a[2]")).Text);
-           // Assert.That(driver.FindElement(By.XPath("//*[@id='tmsGrid']/div[3]/table/tbody/tr[1]/td[5]/a[2]")).Text, Is.EqualTo("Delete"));
+           
+            //click delete button
             driver.FindElement(By.XPath("//*[@id='tmsGrid']/div[3]/table/tbody/tr[1]/td[5]/a[2]")).Click();
+            
+            //Switch to Delete pop up
             IAlert popup = driver.SwitchTo().Alert();
+
+            //cofirm delete
             popup.Accept();
 
         }
 
-        internal void EditRecord(string code, string Description)
+        internal void EditRecord(IWebDriver driver ,string code, string Description)
         {
-            //Thread.Sleep(1000);
+            
             WaitHelper.ForElement(By.XPath("//*[@id='tmsGrid']/div[3]/table/tbody/tr[1]/td[5]/a[1]"), driver, (1.5));
 
             //check the edit button has 'edit' text
@@ -84,6 +87,7 @@ namespace TurnUpNUnitTestProject
 
              //select and click 1st row edit button
              driver.FindElement(By.XPath("//*[@id='tmsGrid']/div[3]/table/tbody/tr[1]/td[5]/a[1]")).Click();
+            
             Thread.Sleep(1000);
 
             //check if the edit page is opened
@@ -94,6 +98,7 @@ namespace TurnUpNUnitTestProject
             }catch(Exception message)
             {
                 Console.WriteLine(message);
+                Assert.Fail();
             }
 
             IWebElement testcode = driver.FindElement(By.Id("Code"));
@@ -140,20 +145,36 @@ namespace TurnUpNUnitTestProject
         }
 
         //this method validates newly added row starting from last page and then going to previous pages
-        internal void ValidateNewRecord(string code, string Description)
+        internal void ValidateNewRecord(IWebDriver driver,string code, string Description)
         {
-            GoToLastPage();
-            // Wait for 1 second
-            Thread.Sleep(1000);
-
+            //go to last page
+            GoToLastPage(driver);
+            // Wait for 1.5 second
+            WaitHelper.ForElement(By.XPath("//*[@id='tmsGrid']/div[4]/a[4]/span"), driver, (1.5));
+            
+            //total number of pages
+            var totalPage = driver.FindElement(By.XPath("//*[@id='tmsGrid']/div[4]/ul/li[2]/span")).Text;
+            int LastPageNumber = Convert.ToInt32(totalPage);
             try
             {
-                while (!validateRows(code, Description))
+                //loop from last page to first until find the new record
+                for (int i = LastPageNumber; i>=1; i--)
                 {
-                    //validateRows(code, Description);
-                    //click previous page
-                    GoToPreviousPage();
-                }               
+                    if(validateRows(driver,code, Description))
+                    {
+                        Assert.Pass("Newly created row has found");
+                        break;
+                    }
+                    if (validateRows(driver, code, Description).Equals(false) && i > 1)
+                    {
+                        GoToPreviousPage(driver);
+                    }
+                    if (validateRows(driver, code, Description).Equals(false) && i == 1)
+                    {
+                        Assert.Fail("newly created row not found");
+                    }
+                }
+                        
             }
             catch (Exception message)
             {
@@ -162,7 +183,7 @@ namespace TurnUpNUnitTestProject
         }
 
         //This method validates the edited record
-        internal void ValidateEditRecord(string code, string Description)
+        internal void ValidateEditRecord(IWebDriver driver, string code, string Description)
         {
             // Wait for 1 second
             Thread.Sleep(1000);
@@ -177,11 +198,11 @@ namespace TurnUpNUnitTestProject
         }
 
         //This method validates rows of a page
-        internal bool validateRows(string code, string Description)
+        internal bool validateRows(IWebDriver driver, string code, string Description)
         {
             bool IsMatched = false;
-            //var NoofRows = driver.FindElement(By.XPath("//*[@id='tmsGrid']/div[4]/span[1]/span/span/span[1]")).GetAttribute("value");           
-            //int RowsPerPage = Convert.ToInt32(NoofRows);
+                    
+            //loop through the rows
             for (int i = 1; i <= 10; i++)
             {
                 //catch exception if total number of rows are less than 10 on the last page
@@ -189,48 +210,51 @@ namespace TurnUpNUnitTestProject
                 //Assign value of each column data of the selected row to the string variables
                  string FirstColumnData = driver.FindElement(By.XPath("//*[@id='tmsGrid']/div[3]/table/tbody/tr[" + i + "]/td[1]")).Text;
                  string ThirdColumnData = driver.FindElement(By.XPath("//*[@id='tmsGrid']/div[3]/table/tbody/tr[" + i + "]/td[3]")).Text;
-                 //string FourthColumnData = driver.FindElement(By.XPath("//*[@id='tmsGrid']/div[3]/table/tbody/tr[" + i + "]/td[4]")).Text;
-
+                 
                  //validate if the row data matches with the input
-                 if (FirstColumnData == code && ThirdColumnData == Description)// && FourthColumnData == "$10.00"
+                 if (FirstColumnData == code && ThirdColumnData == Description)
                  {
                      //if all conditions matches then print confirmation message and stop the loop
-                     Assert.Pass("Code and Description of newly created row matched");
+                     //Assert.Pass("Code and Description of newly created row matched");
                     IsMatched = true;
                      break;
-                 }
-               
-                            
+                 }                        
             }
 
             return IsMatched;
         }
 
-        internal void GoToLastPage()
+        internal void GoToLastPage(IWebDriver driver)
         {
-            
-            
+
+            try
+            {
                 //Find go to last page button and click it
                 IWebElement lastPageBtn = driver.FindElement(By.XPath("//*[@id='tmsGrid']/div[4]/a[4]/span"));
                 Thread.Sleep(1500);
                 lastPageBtn.Click();
-            
+                //check last page button is disabled
+                
+            }
+            catch (Exception message)
+            {
+                Console.WriteLine(message);
+                Assert.Fail();
+            }
 
         }
 
-        internal void GoToPreviousPage()
+        internal void GoToPreviousPage(IWebDriver driver)
         {
             driver.FindElement(By.XPath("//span[contains(.,'Go to the previous page')]")).Click();
             Thread.Sleep(1000);
         }
 
-        internal void GoToNextPage()
+        internal void GoToNextPage(IWebDriver driver)
         {
             driver.FindElement(By.XPath("//span[contains(.,'Go to the next page')]")).Click();
             Thread.Sleep(1000);
         }
-
-
 
     }
 

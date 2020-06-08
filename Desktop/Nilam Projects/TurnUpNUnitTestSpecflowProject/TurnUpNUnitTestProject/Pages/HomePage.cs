@@ -5,15 +5,10 @@ using System;
 
 namespace TurnUpNUnitTestProject
 {
-    internal class HomePage
+    internal class HomePage : DriverClass
     {
-        private IWebDriver driver;
-
-        public HomePage(IWebDriver driver)
-        {
-            this.driver = driver;
-        }
-        internal void ClickAdministration()
+       
+        internal void ClickAdministration(IWebDriver driver)
         {
             try
             {
@@ -29,7 +24,7 @@ namespace TurnUpNUnitTestProject
             AdministrationBtn.Click();
         }
 
-        internal void ClickTimeMaterial()
+        internal void ClickTimeMaterial(IWebDriver driver)
         {
             //find Time and Material option and click
             IWebElement TimeandMaterial = driver.FindElement(By.XPath("/html/body/div[3]/div/div/ul/li[5]/ul/li[3]/a"));

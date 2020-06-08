@@ -17,17 +17,17 @@ namespace TurnUpNUnitTestProject.HookUp
             driver = new ChromeDriver();
             driver.Manage().Window.Maximize();           
             //Login instance
-            Login loginpage = new Login(driver);
-            loginpage.enterLoginDetail();
+            Login loginpage = new Login();
+            loginpage.enterLoginDetail(driver);
         }
         
         [Given(@"I have navigated to time and material page")]
         public void GivenIHaveNavigatedToTimeAndMaterialPage()
         {
             //HomePage instance
-            HomePage homePage = new HomePage(driver);
-            homePage.ClickAdministration();
-            homePage.ClickTimeMaterial();
+            HomePage homePage = new HomePage();
+            homePage.ClickAdministration(driver);
+            homePage.ClickTimeMaterial(driver);
 
             
         }
@@ -37,17 +37,17 @@ namespace TurnUpNUnitTestProject.HookUp
         {
             Thread.Sleep(3000);
             //TimeNMaterialPage instance
-            TimeMaterialPage timeMaterialPage = new TimeMaterialPage(driver);
-            timeMaterialPage.ClickCreateNew();
-            timeMaterialPage.CreateNewRecord(p0, p1);
+            TimeMaterialPage timeMaterialPage = new TimeMaterialPage();
+            timeMaterialPage.ClickCreateNew(driver);
+            timeMaterialPage.CreateNewRecord(driver, p0, p1);
         }
 
         [Then(@"I can see the newly created item using(.*) and (.*)")]
         public void ThenICanSeeTheNewlyCreatedItemUsingAnd(string p0, string p1)
         {
-            TimeMaterialPage timeMaterialPage = new TimeMaterialPage(driver);
+            TimeMaterialPage timeMaterialPage = new TimeMaterialPage();
 
-            timeMaterialPage.ValidateNewRecord(p0, p1);
+            timeMaterialPage.ValidateNewRecord(driver, p0, p1);
             //close browser
             driver.Quit();
         }
@@ -56,16 +56,16 @@ namespace TurnUpNUnitTestProject.HookUp
         public void WhenIEditAnExistingTimeAndMaterialItemUsingAnd(string p0, string p1)
         {
             //TimeNMaterialPage instance
-            TimeMaterialPage timeMaterialPage = new TimeMaterialPage(driver);
+            TimeMaterialPage timeMaterialPage = new TimeMaterialPage();
             Thread.Sleep(1500);
-            timeMaterialPage.EditRecord(p0, p1);
+            timeMaterialPage.EditRecord(driver, p0, p1);
         }
 
         [Then(@"I can see the edited item using(.*) and (.*)")]
         public void ThenICanSeeTheEditedItemUsingAnd(string p0, string p1)
         {
-            TimeMaterialPage timeMaterialPage = new TimeMaterialPage(driver);
-            timeMaterialPage.ValidateEditRecord(p0, p1);
+            TimeMaterialPage timeMaterialPage = new TimeMaterialPage();
+            timeMaterialPage.ValidateEditRecord(driver, p0, p1);
         }
 
        
@@ -73,18 +73,18 @@ namespace TurnUpNUnitTestProject.HookUp
         public void WhenIHaveNavigatedToTimeAndMaterialPage()
         {
             //HomePage instance
-            HomePage homePage = new HomePage(driver);
-            homePage.ClickAdministration();
-            homePage.ClickTimeMaterial();
+            HomePage homePage = new HomePage();
+            homePage.ClickAdministration(driver);
+            homePage.ClickTimeMaterial(driver);
         }
 
         [Then(@"I can delete an existing Time and material item")]
         public void ThenICanDeleteAnExistingTimeAndMaterialItem()
         {
             //TimeNMaterialPage instance
-            TimeMaterialPage timeMaterialPage = new TimeMaterialPage(driver);
+            TimeMaterialPage timeMaterialPage = new TimeMaterialPage();
             Thread.Sleep(1500);
-            timeMaterialPage.DeleteRecord();
+            timeMaterialPage.DeleteRecord(driver);
         }
 
     }

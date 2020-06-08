@@ -4,6 +4,7 @@ using System.Text;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
 using SeleniumExtras.WaitHelpers;
+// dotseleniumextras
 
 namespace TurnUpNUnitTestProject.Helpers
 {
